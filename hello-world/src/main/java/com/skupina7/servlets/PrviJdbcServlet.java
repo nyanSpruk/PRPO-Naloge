@@ -1,4 +1,4 @@
-package com.skupina7.naloga;
+package com.skupina7.servlets;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
