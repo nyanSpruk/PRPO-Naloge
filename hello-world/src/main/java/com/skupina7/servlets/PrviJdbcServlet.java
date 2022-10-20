@@ -7,6 +7,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import com.kumuluz.ee.configuration.utils.ConfigurationUtil;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Optional;
+import com.skupina7.jdbc.UporabnikDaoImpl;
+import com.skupina7.jdbc.BaseDao;
+import com.skupina7.jdbc.Uporabnik;
+import java.util.List;
+import com.skupina7.jdbc.Entiteta;
 
 @WebServlet("/servlet") 
 public class PrviJdbcServlet extends HttpServlet {
@@ -15,13 +22,35 @@ public class PrviJdbcServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
         throws ServletException, IOException {
 
-            final String service_name = ConfigurationUtil.getInstance().get("kumuluzee.name").get();
-            final String service_version = ConfigurationUtil.getInstance().get("kumuluzee.version").get();
-            final String environment_name = ConfigurationUtil.getInstance().get("kumuluzee.env.name").get();
+        PrintWriter writer = resp.getWriter();
 
-            resp.getWriter().println("Hello fellow java champion!\n\n" +
-                                     "service.name: " + service_name + "\n" + 
-                                     "service.version: " + service_version + "\n" +
-                                     "service.environment.name: " + environment_name);
+        // branje konfiguracije
+        Optional<String> microserviceName = ConfigurationUtil.getInstance().get("kumuluzee.name");
+        microserviceName.ifPresent(s -> writer.println("Ime mikrostoritve: " + s + "\n"));
+
+        // dostop do podatkovne baze
+        BaseDao uporabnikDao = UporabnikDaoImpl.getInstance();
+        Uporabnik firstUser = new Uporabnik("Janez", "Novak", "janeznovak");
+        Uporabnik secondUser = new Uporabnik("Edon", "Kuklec", "edone");
+        Uporabnik thirdUser = new Uporabnik("Joze", "Gorisek", "jozeg");
+
+        // dodaj uporabnika
+        writer.append("Dodajam uporabnika: \n" + firstUser.toString() + "\n");
+        uporabnikDao.vstavi(firstUser);
+        writer.append("Dodajam uporabnika: \n" + secondUser.toString() + "\n");
+        uporabnikDao.vstavi(secondUser);
+
+        // odstrani uporabnika
+        writer.append("Odstranim uporabnika: \n" + firstUser.toString() + "\n");
+        uporabnikDao.odstrani(1);
+
+        // posodobi uporabnika
+        writer.append("Posodabljam uporabnika: \n" + secondUser.toString() + "\n");
+        uporabnikDao.posodobi(thirdUser);
+
+        // // izpis vseh uporabnikov
+        writer.append("Seznam obstojecih uporanikov: \n");
+        List<Entiteta> uporabniki = uporabnikDao.vrniVse();
+        uporabniki.stream().forEach(uporabnik -> writer.append(uporabnik.toString() + "\n"));
     }
 }
