@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.ArrayList;
 import javax.naming.InitialContext;
@@ -95,12 +96,25 @@ public class UporabnikDaoImpl implements BaseDao {
             if (connection == null) {
                 connection = getConnection();
             }
-            String sql = "INSERT INTO uporabnik (ime, priimek, uporabniskoime) VALUES (?, ?, ?)";
-            ps = connection.prepareStatement(sql);
+            String QUERY = "INSERT INTO uporabnik (ime, priimek, uporabniskoime) VALUES (?, ?, ?)";
+            ps = connection.prepareStatement(QUERY, Statement.RETURN_GENERATED_KEYS); // Tell JDBC to return specific columns after issuing a query.
             ps.setString(1, ((Uporabnik) ent).getIme());
             ps.setString(2, ((Uporabnik) ent).getPriimek());
             ps.setString(3, ((Uporabnik) ent).getUporabniskoIme());
-            ps.executeUpdate();
+            int affectedRows = ps.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Creating user failed, no rows affected.");
+            }
+
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    ((Uporabnik) ent).setId(generatedKeys.getInt("id"));
+                } else {
+                    throw new SQLException("Creating user failed, no ID obtained.");
+                }
+            }
+
         } catch (SQLException e) {
             log.severe(e.toString());
         } finally {

@@ -32,7 +32,6 @@ public class PrviJdbcServlet extends HttpServlet {
         BaseDao uporabnikDao = UporabnikDaoImpl.getInstance();
         Uporabnik firstUser = new Uporabnik("Janez", "Novak", "janeznovak");
         Uporabnik secondUser = new Uporabnik("Edon", "Kuklec", "edone");
-        Uporabnik thirdUser = new Uporabnik("Joze", "Gorisek", "jozeg");
 
         // dodaj uporabnika
         writer.append("Dodajam uporabnika: \n" + firstUser.toString() + "\n");
@@ -42,11 +41,14 @@ public class PrviJdbcServlet extends HttpServlet {
 
         // odstrani uporabnika
         writer.append("Odstranim uporabnika: \n" + firstUser.toString() + "\n");
-        uporabnikDao.odstrani(1);
+        uporabnikDao.odstrani(firstUser.getId());
 
         // posodobi uporabnika
         writer.append("Posodabljam uporabnika: \n" + secondUser.toString() + "\n");
-        uporabnikDao.posodobi(thirdUser);
+        secondUser.setIme("Edon");
+        secondUser.setPriimek("Kuklec");
+        secondUser.setUporabniskoIme("edone");
+        uporabnikDao.posodobi(secondUser);
 
         // // izpis vseh uporabnikov
         writer.append("Seznam obstojecih uporanikov: \n");
