@@ -66,4 +66,4 @@ jobs:
           VERSION=$(cat ./hello-world/pom.xml | grep -oPm1 "(?<=<version>)[^<]+")
           nohup java -jar ./hello-world/target/${ARTIFACT_ID}-${VERSION}.jar &
       - name: Run tests
-        run: mvn surefire:test
+        run: mvn surefire:test -f ./hello-world
