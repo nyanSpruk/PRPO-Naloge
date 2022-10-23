@@ -22,4 +22,11 @@ jobs:
           java-version: ${{ matrix.version }}
           distribution: 'adopt'
       - name: Build project with Maven
-        run: mvn -f hello-world/pom.xml --batch-mode --update-snapshots package
+        run: mvn -f hello-world/pom.xml install -DskipTests
+      - name: Run server locally
+        run: |
+          ARTIFACT_ID=$(cat ./hello-world/pom.xml | grep -oPm1 "(?<=<artifactId>)[^<]+")
+          VERSION=$(cat ./hello-world/pom.xml | grep -oPm1 "(?<=<version>)[^<]+")
+          java -jar ./hello-world/target/${ARTIFACT_ID}-${VERSION}.jar
+      - name: Run tests
+        run: mvn surefire:test
