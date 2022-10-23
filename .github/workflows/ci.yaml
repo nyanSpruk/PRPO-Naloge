@@ -47,14 +47,15 @@ jobs:
 
       - name: Setup local database
         run: |
-          docker exec -it postgres-jdbc psql -U postgres -w postgres -c \
+          sudo apt-get install -y postgresql-client-13
+          psql -U postgres -w postgres -c \
            'CREATE TABLE public.uporabnik (
               id serial NOT NULL,
               ime varchar NULL,
               priimek varchar NULL,
               uporabniskoime varchar NULL,
               CONSTRAINT uporabnik_pk PRIMARY KEY (id));'
-          docker exec -it postgres-jdbc psql -U postgres -w postgres -c \
+          psql -U postgres -w postgres -c \
             "INSERT INTO uporabnik (ime, priimek, uporabniskoime) VALUES ('janez', 'novak', 'janezn')"
       - name: Build project with Maven
         run: mvn -f hello-world/pom.xml install -DskipTests
