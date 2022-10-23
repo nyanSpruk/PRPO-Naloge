@@ -47,7 +47,7 @@ jobs:
 
       - name: Setup local database
         run: |
-          sudo apt-get install -y postgresql-client-13
+          sudo apt-get install -y postgresql-client
           psql -U postgres -w postgres -c \
            'CREATE TABLE public.uporabnik (
               id serial NOT NULL,
