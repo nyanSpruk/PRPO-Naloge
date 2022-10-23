@@ -2,7 +2,8 @@ name: Build and test
 
 on: 
   push: 
-    branches: ["feature/*"]
+    paths-ignore:
+      - 'docs/**'
   pull_request:
     branches: ["main", "dev"]
 
