@@ -8,22 +8,46 @@ on:
 
 jobs:
   build:
+    # Different build strategies, different os and versions
     strategy:
       matrix: 
         os: [ubuntu-latest]
         version: [17]
+
+    # OS for vm to run on
     runs-on: ${{ matrix.os }}
+
+    # Setup local database
+    services:
+      postgres-jdbc:
+        image: postgres:13
+        env:
+          - POSTGRES_PASSWORD=postgres
+          - POSTGRES_DB=uporabniki
+        ports:
+          - 5432:5432
+        cmd:
+
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # CI job
     steps:
       - name: Checkout code
         uses: actions/checkout@v3.1.0
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3.6.0
         with:
           java-version: ${{ matrix.version }}
           distribution: 'adopt'
+
       - name: Setup local database
         run: |
-          docker run -d --name postgres-jdbc -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=uporabniki -p 5432:5432 postgres:13
           docker exec -it postgres-jdbc psql -U postgres -w postgres -c \
            'CREATE TABLE public.uporabnik (
               id serial NOT NULL,
