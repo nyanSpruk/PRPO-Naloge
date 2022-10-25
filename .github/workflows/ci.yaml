@@ -2,24 +2,69 @@ name: Build and test
 
 on: 
   push: 
-    branches: ["feature/*"]
+    paths-ignore:
+      - 'docs/**'
   pull_request:
     branches: ["main", "dev"]
 
 jobs:
   build:
+    # Different build strategies, different os and versions
     strategy:
       matrix: 
         os: [ubuntu-latest]
         version: [17]
+
+    # OS for vm to run on
     runs-on: ${{ matrix.os }}
+
+    # Setup local database
+    services:
+      postgres:
+        image: postgres:13 
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: uporabniki
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres-jdbc
+
+    # CI job
     steps:
       - name: Checkout code
         uses: actions/checkout@v3.1.0
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3.6.0
         with:
           java-version: ${{ matrix.version }}
           distribution: 'adopt'
+
+      - name: Setup local database
+        run: |
+          sudo apt-get install -y postgresql-client
+          export PGPASSWORD=postgres
+          psql -h 127.0.0.1 -U postgres -d uporabniki -c \
+           'CREATE TABLE public.uporabnik (
+              id serial NOT NULL,
+              ime varchar NULL,
+              priimek varchar NULL,
+              uporabniskoime varchar NULL,
+              CONSTRAINT uporabnik_pk PRIMARY KEY (id));'
+          psql -h 127.0.0.1 -U postgres -d uporabniki -c \
+            "INSERT INTO uporabnik (ime, priimek, uporabniskoime) VALUES ('janez', 'novak', 'janezn')"
       - name: Build project with Maven
-        run: mvn -f hello-world/pom.xml --batch-mode --update-snapshots package
+        run: mvn -f hello-world/pom.xml install -DskipTests
+      - name: Run server locally
+        run: |
+          ARTIFACT_ID=$(cat ./hello-world/pom.xml | grep -oPm1 "(?<=<artifactId>)[^<]+")
+          VERSION=$(cat ./hello-world/pom.xml | grep -oPm1 "(?<=<version>)[^<]+")
+          nohup java -jar ./hello-world/target/${ARTIFACT_ID}-${VERSION}.jar &
+      - name: Run tests
+        run: mvn surefire:test -f ./hello-world
