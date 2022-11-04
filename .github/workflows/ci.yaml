@@ -46,6 +46,10 @@ jobs:
           java-version: ${{ matrix.version }}
           distribution: 'adopt'
 
+      - name: Export sample environmental variables
+        run: |
+         export $(cat hello-world/sample.env )
+
       - name: Setup local database
         run: |
           sudo apt-get install -y postgresql-client
@@ -59,12 +63,15 @@ jobs:
               CONSTRAINT uporabnik_pk PRIMARY KEY (id));'
           psql -h 127.0.0.1 -U postgres -d uporabniki -c \
             "INSERT INTO uporabnik (ime, priimek, uporabniskoime) VALUES ('janez', 'novak', 'janezn')"
+
       - name: Build project with Maven
         run: mvn -f hello-world/pom.xml install -DskipTests
+
       - name: Run server locally
         run: |
           ARTIFACT_ID=$(cat ./hello-world/pom.xml | grep -oPm1 "(?<=<artifactId>)[^<]+")
           VERSION=$(cat ./hello-world/pom.xml | grep -oPm1 "(?<=<version>)[^<]+")
           nohup java -jar ./hello-world/target/${ARTIFACT_ID}-${VERSION}.jar &
+
       - name: Run tests
         run: mvn surefire:test -f ./hello-world
